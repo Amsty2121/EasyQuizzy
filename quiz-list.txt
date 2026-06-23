@@ -1,0 +1,3 @@
+window.QUIZ_FILES = [
+  { title: "Morfo - PDF + imagini", file: "morfo_pdf_plus_images_questions.txt" }
+];
