@@ -1,3 +1,4 @@
 window.QUIZ_FILES = [
-  { title: "Morfo - PDF + imagini", file: "morfo_pdf_plus_images_questions.txt" }
+  { title: "Morfo - PDF + imagini", file: "morfo_pdf_plus_images_questions.txt" },
+  { title: "Cardiologie examen", file: "Cardiologie_examen_questions.txt" }
 ];
