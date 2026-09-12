@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Small Quiz App by Dimcik with Love</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=568-toggle-layout" />
 </head>
 <body>
   <main class="app-shell">
@@ -21,16 +21,29 @@
     </section>
 
     <section class="toolbar" aria-label="Setări quiz">
-      <label for="questionCount">Întrebări per pagină</label>
-      <select id="questionCount">
-        <option value="10">10 întrebări</option>
-        <option value="20">20 întrebări</option>
-        <option value="30">30 întrebări</option>
-        <option value="60" selected>60 întrebări</option>
-      </select>
+      <div class="toolbar-actions">
       <button id="chooseQuizBtn" class="secondary">Schimbă quizul</button>
       <button id="startBtn" class="primary">Afișează de la început</button>
       <button id="resetBtn" class="secondary">Resetează răspunsurile</button>
+      </div>
+      <div class="toolbar-settings">
+        <div class="toolbar-field">
+          <label for="questionCount">Întrebări per pagină</label>
+          <select id="questionCount">
+            <option value="10">10 întrebări</option>
+            <option value="20">20 întrebări</option>
+            <option value="30">30 întrebări</option>
+            <option value="60" selected>60 întrebări</option>
+          </select>
+        </div>
+        <div class="toolbar-field">
+          <label for="orderToggle">Ordine</label>
+          <label class="order-switch" for="orderToggle">
+            <input id="orderToggle" type="checkbox" role="switch" aria-label="Amestecă toate întrebările" />
+            <span id="orderState" aria-live="polite">În ordine</span>
+          </label>
+        </div>
+      </div>
     </section>
 
     <section id="pagerTop" class="pager" aria-label="Paginare"></section>
@@ -72,7 +85,7 @@
     </section>
   </div>
 
-  <script src="quiz-list.txt?v=566-no-folder-fixed-meta"></script>
-  <script src="app.js?v=566-no-folder-fixed-meta"></script>
+  <script src="quiz-list.txt?v=567-full-shuffle"></script>
+  <script src="app.js?v=568-toggle-layout"></script>
 </body>
 </html>

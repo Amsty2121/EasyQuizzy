@@ -6,6 +6,8 @@ const quizEl = document.getElementById('quiz');
 const pagerTopEl = document.getElementById('pagerTop');
 const pagerBottomEl = document.getElementById('pagerBottom');
 const countEl = document.getElementById('questionCount');
+const orderToggle = document.getElementById('orderToggle');
+const orderState = document.getElementById('orderState');
 const startBtn = document.getElementById('startBtn');
 const resetBtn = document.getElementById('resetBtn');
 const chooseQuizBtn = document.getElementById('chooseQuizBtn');
@@ -26,9 +28,12 @@ const DEFAULT_META = {
 
 let availableQuizFiles = normalizeInitialFiles(window.QUIZ_FILES);
 let activeMeta = { ...DEFAULT_META };
+let allQuestions = [];
 let sortedQuestions = [];
 let currentPage = 0;
 let checkedState = new Map();
+let isShuffled = false;
+let lastShuffledFirstIds = new Set();
 
 function normalizeInitialFiles(files) {
   const list = Array.isArray(files) ? files.filter(item => item && item.file) : [];
@@ -104,9 +109,13 @@ function evaluateQuizText(text, fallbackTitle = 'Quiz') {
 
 function prepareLoadedQuiz(meta, questions) {
   activeMeta = { ...DEFAULT_META, title: meta?.title || DEFAULT_META.title };
-  sortedQuestions = [...questions].sort((a, b) => Number(a.id) - Number(b.id));
+  allQuestions = [...questions].sort((a, b) => Number(a.id) - Number(b.id));
+  sortedQuestions = [...allQuestions];
+  isShuffled = false;
+  lastShuffledFirstIds.clear();
   checkedState.clear();
   currentPage = 0;
+  updateOrderToggle();
   applyQuizMeta();
   renderQuiz();
   hideModal();
@@ -220,6 +229,92 @@ function applyQuizMeta() {
 
 function getBatchSize() {
   return Number(countEl.value || 60);
+}
+
+function getQuestionKey(question) {
+  return String(question?.id ?? question?.sourceNumber ?? question?.question ?? '');
+}
+
+function shuffleQuestions(questions) {
+  const shuffled = [...questions];
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[index]];
+  }
+  return shuffled;
+}
+
+function buildFullShuffledOrder() {
+  if (!allQuestions.length) return [];
+
+  const firstPageSize = Math.min(getBatchSize(), allQuestions.length);
+  const orderedFirstIds = new Set(
+    allQuestions.slice(0, firstPageSize).map(getQuestionKey)
+  );
+  const excludedFirstIds = new Set([
+    ...orderedFirstIds,
+    ...lastShuffledFirstIds
+  ]);
+
+  let firstPageCandidates = allQuestions.filter(
+    question => !excludedFirstIds.has(getQuestionKey(question))
+  );
+
+  // For small quizzes, prioritize being different from ordered mode even if
+  // there are not enough questions to also avoid the previous random page.
+  if (firstPageCandidates.length < firstPageSize) {
+    firstPageCandidates = allQuestions.filter(
+      question => !orderedFirstIds.has(getQuestionKey(question))
+    );
+  }
+
+  // Final fallback: still shuffle every question and guarantee a different
+  // first question whenever the quiz contains at least two questions.
+  if (firstPageCandidates.length < firstPageSize) {
+    const fallback = shuffleQuestions(allQuestions);
+    if (
+      fallback.length > 1
+      && getQuestionKey(fallback[0]) === getQuestionKey(allQuestions[0])
+    ) {
+      [fallback[0], fallback[1]] = [fallback[1], fallback[0]];
+    }
+    lastShuffledFirstIds = new Set(
+      fallback.slice(0, firstPageSize).map(getQuestionKey)
+    );
+    return fallback;
+  }
+
+  const firstPage = shuffleQuestions(firstPageCandidates).slice(0, firstPageSize);
+  const firstPageIds = new Set(firstPage.map(getQuestionKey));
+  const remainingQuestions = allQuestions.filter(
+    question => !firstPageIds.has(getQuestionKey(question))
+  );
+
+  lastShuffledFirstIds = firstPageIds;
+  return [...firstPage, ...shuffleQuestions(remainingQuestions)];
+}
+
+function updateOrderToggle() {
+  if (!orderToggle) return;
+  orderToggle.checked = isShuffled;
+  orderState.textContent = isShuffled ? 'Amestecat' : 'În ordine';
+}
+
+function toggleQuestionOrder() {
+  isShuffled = orderToggle.checked;
+  sortedQuestions = isShuffled
+    ? buildFullShuffledOrder()
+    : [...allQuestions];
+  currentPage = 0;
+  checkedState.clear();
+  updateOrderToggle();
+  renderQuiz();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function handleBatchSizeChange() {
+  if (isShuffled) sortedQuestions = buildFullShuffledOrder();
+  startQuiz();
 }
 
 function getTotalPages() {
@@ -436,7 +531,8 @@ quizEl.addEventListener('click', event => {
 });
 
 startBtn.addEventListener('click', startQuiz);
-countEl.addEventListener('change', startQuiz);
+countEl.addEventListener('change', handleBatchSizeChange);
+orderToggle.addEventListener('change', toggleQuestionOrder);
 resetBtn.addEventListener('click', () => document.querySelectorAll('.question-card').forEach(clearQuestion));
 chooseQuizBtn.addEventListener('click', showModal);
 loadSelectedQuizBtn.addEventListener('click', loadSelectedQuiz);
