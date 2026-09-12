@@ -37,10 +37,17 @@
           </select>
         </div>
         <div class="toolbar-field">
-          <label for="orderToggle">Ordine</label>
+          <label for="orderToggle">Ordine întrebări</label>
           <label class="order-switch" for="orderToggle">
             <input id="orderToggle" type="checkbox" role="switch" aria-label="Amestecă toate întrebările" />
             <span id="orderState" aria-live="polite">În ordine</span>
+          </label>
+        </div>
+        <div class="toolbar-field">
+          <label for="answerOrderToggle">Ordine răspunsuri</label>
+          <label class="order-switch" for="answerOrderToggle">
+            <input id="answerOrderToggle" type="checkbox" role="switch" aria-label="Amestecă variantele de răspuns" />
+            <span id="answerOrderState" aria-live="polite">În ordine</span>
           </label>
         </div>
       </div>
@@ -86,6 +93,6 @@
   </div>
 
   <script src="quiz-list.txt?v=567-full-shuffle"></script>
-  <script src="app.js?v=568-toggle-layout"></script>
+  <script src="app.js?v=569-answer-order"></script>
 </body>
 </html>

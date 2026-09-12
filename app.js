@@ -8,6 +8,10 @@ const pagerBottomEl = document.getElementById('pagerBottom');
 const countEl = document.getElementById('questionCount');
 const orderToggle = document.getElementById('orderToggle');
 const orderState = document.getElementById('orderState');
+const answerOrderToggle = document.getElementById('answerOrderToggle');
+const answerOrderState = document.getElementById('answerOrderState');
+let areAnswersShuffled = false;
+const answerOrders = new Map();
 const startBtn = document.getElementById('startBtn');
 const resetBtn = document.getElementById('resetBtn');
 const chooseQuizBtn = document.getElementById('chooseQuizBtn');
@@ -112,6 +116,10 @@ function prepareLoadedQuiz(meta, questions) {
   allQuestions = [...questions].sort((a, b) => Number(a.id) - Number(b.id));
   sortedQuestions = [...allQuestions];
   isShuffled = false;
+  areAnswersShuffled = false;
+  answerOrders.clear();
+  answerOrderToggle.checked = false;
+  answerOrderState.textContent = 'În ordine';
   lastShuffledFirstIds.clear();
   checkedState.clear();
   currentPage = 0;
@@ -233,6 +241,52 @@ function getBatchSize() {
 
 function getQuestionKey(question) {
   return String(question?.id ?? question?.sourceNumber ?? question?.question ?? '');
+}
+
+function getDisplayOptions(question) {
+  const options = question.options || [];
+  if (!areAnswersShuffled || options.length < 2) return options;
+  const key = getQuestionKey(question);
+  if (!answerOrders.has(key)) {
+    const shuffled = shuffleQuestions(options);
+    // Keep each complete option (letter, text and correct flag) together.
+    // Avoid an unchanged order, including the previous random arrangement.
+    if (shuffled.every((option, index) => option === options[index])) {
+      const index = 1 + Math.floor(Math.random() * (shuffled.length - 1));
+      [shuffled[0], shuffled[index]] = [shuffled[index], shuffled[0]];
+    }
+    answerOrders.set(key, shuffled);
+  }
+  return answerOrders.get(key);
+}
+
+function toggleAnswerOrder() {
+  areAnswersShuffled = answerOrderToggle.checked;
+  if (areAnswersShuffled) {
+    const previousOrders = new Map(answerOrders);
+    answerOrders.clear();
+    allQuestions.forEach(question => {
+      const options = getDisplayOptions(question);
+      const previous = previousOrders.get(getQuestionKey(question));
+      if (options.length > 1 && previous
+          && options.every((option, index) => option === previous[index])) {
+        [options[0], options[1]] = [options[1], options[0]];
+      }
+    });
+  }
+  answerOrderState.textContent = areAnswersShuffled ? 'Amestecat' : 'În ordine';
+  // Reorder existing labels without losing selections, feedback or scores.
+  quizEl.querySelectorAll('.question-card').forEach(card => {
+    const question = findQuestionByCard(card);
+    const container = card.querySelector('.options');
+    if (!question || !container) return;
+    const labels = new Map([...container.querySelectorAll('.option')]
+      .map(label => [label.dataset.letter, label]));
+    getDisplayOptions(question).forEach(option => {
+      const label = labels.get(String(option.letter));
+      if (label) container.appendChild(label);
+    });
+  });
 }
 
 function shuffleQuestions(questions) {
@@ -406,7 +460,7 @@ function renderQuestionCard(q, index) {
       </div>
       ${renderQuestionImage(q)}
       <div class="options">
-        ${q.options.map(opt => `
+        ${getDisplayOptions(q).map(opt => `
           <label class="option" data-letter="${escapeHtml(opt.letter)}">
             <input type="${inputType}" name="${inputName}" value="${escapeHtml(opt.letter)}" />
             <span class="letter">${escapeHtml(String(opt.letter).toUpperCase())})</span>
@@ -533,6 +587,7 @@ quizEl.addEventListener('click', event => {
 startBtn.addEventListener('click', startQuiz);
 countEl.addEventListener('change', handleBatchSizeChange);
 orderToggle.addEventListener('change', toggleQuestionOrder);
+answerOrderToggle.addEventListener('change', toggleAnswerOrder);
 resetBtn.addEventListener('click', () => document.querySelectorAll('.question-card').forEach(clearQuestion));
 chooseQuizBtn.addEventListener('click', showModal);
 loadSelectedQuizBtn.addEventListener('click', loadSelectedQuiz);
