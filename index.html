@@ -4,9 +4,22 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Small Quiz App by Dimcik with Love</title>
-  <link rel="stylesheet" href="style.css?v=568-toggle-layout" />
+  <link rel="stylesheet" href="style.css?v=570-login" />
 </head>
 <body>
+  <section id="loginScreen" class="login-screen" aria-labelledby="loginTitle">
+    <form id="loginForm" class="login-card">
+      <div class="login-brand">EASYQUIZZY</div>
+      <h1 id="loginTitle">Bine ai revenit</h1>
+      <p>Introdu parola pentru a deschide testele.</p>
+      <label for="loginPassword">Parolă</label>
+      <input id="loginPassword" type="password" autocomplete="current-password" required autofocus aria-describedby="loginMessage" />
+      <button id="loginSubmit" type="submit">Intră în aplicație</button>
+      <p id="loginMessage" role="status" aria-live="polite"></p>
+      <noscript>Activează JavaScript pentru a utiliza aplicația.</noscript>
+    </form>
+  </section>
+  <div id="quizApp" hidden>
   <main class="app-shell">
     <section class="hero" aria-label="Informații quiz">
       <div class="hero-content">
@@ -22,6 +35,7 @@
 
     <section class="toolbar" aria-label="Setări quiz">
       <div class="toolbar-actions">
+      <button id="logoutBtn" class="secondary" type="button">Ieși din cont</button>
       <button id="chooseQuizBtn" class="secondary">Schimbă quizul</button>
       <button id="startBtn" class="primary">Afișează de la început</button>
       <button id="resetBtn" class="secondary">Resetează răspunsurile</button>
@@ -92,7 +106,7 @@
     </section>
   </div>
 
-  <script src="quiz-list.txt?v=567-full-shuffle"></script>
-  <script src="app.js?v=569-answer-order"></script>
+  </div>
+  <script src="auth.js?v=1"></script>
 </body>
 </html>
